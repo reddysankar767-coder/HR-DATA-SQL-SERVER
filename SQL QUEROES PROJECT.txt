@@ -1,0 +1,154 @@
+ use HRDATA
+ 
+
+ select * from employees
+ select * from departments
+ select * from locations
+ select * from countries
+ select * from jobs
+ select * from dependents
+ select * from regions
+
+
+
+ -- 1. Display all employees
+SELECT *
+FROM employees;
+
+-- 2. Display employee names and salaries
+SELECT first_name, last_name, salary
+FROM employees;
+
+-- 3. Display employees whose salary is greater than 10000
+SELECT first_name, last_name, salary
+FROM employees
+WHERE salary > 10000;
+
+-- 4. Display employees working in department 6
+SELECT employee_id, first_name, last_name, department_id
+FROM employees
+WHERE department_id = 6;
+
+-- 5. Display employees in descending order of salary
+SELECT first_name, last_name, salary
+FROM employees
+ORDER BY salary DESC;
+
+-- 6. Find the highest salary
+SELECT MAX(salary) AS HighestSalary
+FROM employees;
+
+-- 7. Find the lowest salary
+SELECT MIN(salary) AS LowestSalary
+FROM employees;
+
+-- 8. Find the average salary
+SELECT AVG(salary) AS AverageSalary
+FROM employees;
+
+-- 9. Count total employees
+SELECT COUNT(*) AS TotalEmployees
+FROM employees;
+
+-- 10. Count employees in each department
+SELECT department_id, COUNT(*) AS EmployeeCount
+FROM employees
+GROUP BY department_id
+ 
+ ---11Find the second-highest salary
+ select MAX(salary) as second_highest
+ from employees
+ where salary<
+ (
+ select MAX(salary)
+ from employees
+ )
+
+ ---12Find the top 3 highest-paid employees
+
+ with rankemployees as
+ (
+ select employee_id,first_name,last_name,salary,
+ ROW_NUMBER()over (order by salary desc) as rn
+ from employees)
+ select employee_id,first_name,last_name,salary
+ from rankemployees
+ where rn<=3
+
+---13. Find employees earning more than the average salary
+
+ select employee_id,first_name,last_name,salary
+from employees
+where salary>(
+select AVG(salary)
+from employees
+)
+
+---14Find the highest-paid employee in each department
+
+with highestpaid as(
+select employee_id,first_name,last_name,salary,department_id,
+ROW_NUMBER() over (partition by department_id order by salary desc) as rn
+from employees
+)
+select * from highestpaid
+where rn=1
+
+---Find employees who earn more than their manager
+
+select e.first_name+ ' '+e.last_name as employeename,
+e.salary as employeesalary,
+m.first_name+ ' '+m.last_name as managername,
+m.salary as managersalary
+from employees as e
+join employees as m
+on e.manager_id=m.employee_id
+where e.salary>m.salary
+
+---15Find the top 2 salaries in each department
+
+with top2dep as 
+(
+select employee_id,department_id,first_name,last_name,salary,
+ dense_rank () over (partition by department_id order by salary desc) as rn
+from employees
+)
+select * from top2dep
+where rn=2
+
+---16Find duplicate employee names
+
+select first_name,last_name,COUNT(*) as dup_empcount
+from employees
+group by first_name,last_name
+having COUNT(*)>1
+
+---17Find departments with more than 5 employees
+
+select department_id,COUNT(*) as dep_empcount
+from employees
+group by department_id
+having COUNT(*)>5
+
+---18Find employees whose salary is greater than their department's average
+
+select e1.first_name,e1.last_name,e1.department_id
+from employees as e1
+where e1.salary>
+(
+select AVG(e2.salary)
+from employees as e2
+where e2.department_id=e1.department_id
+)
+
+---19Find employees who don't have a manager
+
+select employee_id,first_name,last_name,manager_id
+from employees 
+where manager_id is null;
+
+---20. Find employees hired in the last 5 years
+
+select employee_id,first_name,last_name,hire_date
+from employees
+where hire_date>=DATEADD(YEAR,-5,GETDATE());
